@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MRI 뷰어 — 뇌종양 MRI 분석</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="viewer-layout">
+
+  <!-- ── 좌측 결과 패널 ── -->
+  <aside class="viewer-sidebar">
+
+    <!-- 헤더 -->
+    <div class="viewer-sidebar-header">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">← 목록</a>
+      <span style="font-weight:700;font-size:0.95rem">분석 결과</span>
+    </div>
+
+    <!-- 뷰 모드 전환 -->
+    <div class="view-mode-bar">
+      <button class="view-mode-btn active" id="btn-doctor" onclick="setView('doctor')">
+        🩺 의사용
+      </button>
+      <button class="view-mode-btn" id="btn-patient" onclick="setView('patient')">
+        👤 환자용
+      </button>
+    </div>
+
+    <!-- ══════════ 의사용 뷰 ══════════ -->
+    <div id="view-doctor">
+
+      <!-- 종양 확률 -->
+      <div class="result-section prob-display" id="prob-section">
+        <div class="prob-circle" id="prob-circle">
+          <div class="prob-number" id="prob-number">—</div>
+          <div class="prob-label">종양 확률</div>
+        </div>
+        <div style="font-weight:700;font-size:1rem" id="prob-verdict">로딩 중...</div>
+      </div>
+
+      <!-- 정량 분석 -->
+      <div class="result-section">
+        <h3>정량 분석</h3>
+        <div class="result-metric">
+          <span class="result-metric-label">전체 체적</span>
+          <span class="result-metric-value" id="r-volume">—</span>
+        </div>
+        <div class="result-metric">
+          <span class="result-metric-label">중심 좌표 (vox)</span>
+          <span class="result-metric-value mono" id="r-centroid" style="font-size:0.82rem">—</span>
+        </div>
+        <div class="result-metric">
+          <span class="result-metric-label">분석 일시</span>
+          <span class="result-metric-value" id="r-date" style="font-size:0.82rem">—</span>
+        </div>
+      </div>
+
+      <!-- XAI: 종양 구성 분석 -->
+      <div class="result-section" id="xai-section" style="display:none">
+        <h3 style="margin-bottom:12px">종양 구성 분석</h3>
+        <div class="result-metric" style="margin-bottom:8px">
+          <span class="result-metric-label">추정 위치</span>
+          <span class="result-metric-value" id="xai-location" style="font-size:0.82rem">—</span>
+        </div>
+        <div class="result-metric" style="margin-bottom:14px">
+          <span class="result-metric-label">위험도</span>
+          <span class="xai-risk-badge" id="xai-risk">—</span>
+        </div>
+        <div class="xai-bars">
+          <div class="xai-bar-row">
+            <span class="xai-bar-label">활성 종양</span>
+            <div class="xai-bar-track"><div class="xai-bar xai-bar-enhancing" id="bar-enhancing"></div></div>
+            <span class="xai-bar-val" id="val-enhancing">—</span>
+          </div>
+          <div class="xai-bar-row">
+            <span class="xai-bar-label">괴사</span>
+            <div class="xai-bar-track"><div class="xai-bar xai-bar-necrotic" id="bar-necrotic"></div></div>
+            <span class="xai-bar-val" id="val-necrotic">—</span>
+          </div>
+          <div class="xai-bar-row">
+            <span class="xai-bar-label">부종</span>
+            <div class="xai-bar-track"><div class="xai-bar xai-bar-edema" id="bar-edema"></div></div>
+            <span class="xai-bar-val" id="val-edema">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- XAI: 기본 소견 -->
+      <div class="result-section" id="xai-desc-section" style="display:none">
+        <h3 style="margin-bottom:10px">기본 소견</h3>
+        <p class="xai-description" id="xai-description">—</p>
+        <p class="muted" style="font-size:0.72rem;margin-top:10px;line-height:1.5">
+          * 위치 추정은 복셀 좌표 기반이며 실제 해부학적 구조와 차이가 있을 수 있습니다.
+        </p>
+      </div>
+
+      <!-- AI 임상 소견 (Claude) -->
+      <div class="result-section" id="ai-doctor-section">
+        <h3 style="margin-bottom:12px">AI 임상 소견</h3>
+        <div id="ai-doctor-loading" class="ai-loading-box">
+          <div class="spinner" style="width:18px;height:18px;border-width:2px"></div>
+          <span class="muted" style="font-size:0.8rem">AI 소견 생성 중...</span>
+        </div>
+        <div id="ai-doctor-content" style="display:none"></div>
+        <p class="muted" id="ai-doctor-note" style="display:none;font-size:0.7rem;margin-top:10px;line-height:1.5">
+          * AI가 생성한 참고용 소견입니다. 최종 판단은 전문의가 수행합니다.
+        </p>
+      </div>
+
+      <!-- 색상 범례 -->
+      <div class="result-section">
+        <h3 style="margin-bottom:12px">색상 범례</h3>
+        <div class="seg-legend">
+          <div class="seg-legend-item">
+            <div class="seg-color" style="background:#ef4444"></div>
+            <span>활성 종양 (Enhancing)</span>
+          </div>
+          <div class="seg-legend-item">
+            <div class="seg-color" style="background:#f97316"></div>
+            <span>괴사 (Necrotic Core)</span>
+          </div>
+          <div class="seg-legend-item">
+            <div class="seg-color" style="background:#eab308"></div>
+            <span>부종 (Edema)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 슬라이스 탐색 -->
+      <div class="result-section">
+        <h3 style="margin-bottom:12px">슬라이스 탐색</h3>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="muted" style="width:40px;font-size:0.78rem">Axial</span>
+            <input class="slice-range" type="range" min="0" max="154" value="77" id="slice-axial" style="flex:1" />
+            <span id="val-axial" style="width:24px;text-align:right;font-size:0.78rem">40</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="muted" style="width:40px;font-size:0.78rem">Cor</span>
+            <input class="slice-range" type="range" min="0" max="239" value="120" id="slice-coronal" style="flex:1" />
+            <span id="val-coronal" style="width:24px;text-align:right;font-size:0.78rem">120</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="muted" style="width:40px;font-size:0.78rem">Sag</span>
+            <input class="slice-range" type="range" min="0" max="239" value="120" id="slice-sagittal" style="flex:1" />
+            <span id="val-sagittal" style="width:24px;text-align:right;font-size:0.78rem">120</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 20px;margin-top:auto">
+        <p class="muted" style="font-size:0.75rem;line-height:1.5">
+          ⚠ 본 AI 분석 결과는 의사결정 보조 도구입니다. 최종 진단은 반드시 전문의의 판단을 따르세요.
+        </p>
+      </div>
+    </div><!-- /view-doctor -->
+
+    <!-- ══════════ 환자용 뷰 ══════════ -->
+    <div id="view-patient" style="display:none">
+
+      <!-- 검사 결과 상태 카드 -->
+      <div class="result-section">
+        <div class="patient-status-card" id="patient-status-card">
+          <div class="patient-status-icon" id="patient-status-icon">📋</div>
+          <div class="patient-status-label" id="patient-status-label">검사 완료</div>
+          <p class="patient-status-msg" id="patient-status-msg">검사 결과를 확인하였습니다.</p>
+        </div>
+      </div>
+
+      <!-- 환자용 AI 설명 -->
+      <div class="result-section">
+        <h3 style="margin-bottom:12px">검사 결과 안내</h3>
+        <div id="ai-patient-loading" class="ai-loading-box">
+          <div class="spinner" style="width:18px;height:18px;border-width:2px"></div>
+          <span class="muted" style="font-size:0.8rem">안내 내용 준비 중...</span>
+        </div>
+        <div id="ai-patient-content" class="patient-explanation" style="display:none"></div>
+      </div>
+
+      <!-- 다음 단계 안내 -->
+      <div class="result-section">
+        <h3 style="margin-bottom:14px">다음 단계 안내</h3>
+        <div class="next-steps-list">
+          <div class="next-step-item">
+            <span class="next-step-num">1</span>
+            <span>담당 의사 선생님과 검사 결과를 상담하세요.</span>
+          </div>
+          <div class="next-step-item">
+            <span class="next-step-num">2</span>
+            <span>필요 시 추가 정밀 검사를 안내받으실 수 있습니다.</span>
+          </div>
+          <div class="next-step-item">
+            <span class="next-step-num">3</span>
+            <span>의료팀이 최선의 방법으로 도움을 드릴 것입니다.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 분석 일시 (환자용) -->
+      <div class="result-section">
+        <div class="result-metric">
+          <span class="result-metric-label">검사 일시</span>
+          <span class="result-metric-value" id="r-date-patient" style="font-size:0.82rem">—</span>
+        </div>
+      </div>
+
+      <div style="padding:16px 20px;margin-top:auto">
+        <p class="muted" style="font-size:0.75rem;line-height:1.5">
+          본 안내는 이해를 돕기 위한 참고 자료입니다. 자세한 내용은 담당 의사 선생님께 문의하세요.
+        </p>
+      </div>
+    </div><!-- /view-patient -->
+
+  </aside>
+
+  <!-- ── 뷰어 메인 ── -->
+  <div class="viewer-main">
+    <!-- 툴바 -->
+    <div class="viewer-toolbar">
+      <div>
+        <span class="muted" style="font-size:0.78rem;margin-right:6px">모달리티</span>
+        <div class="modality-btn-group" id="modality-group">
+          <button class="modality-btn active" data-mod="t1">T1</button>
+          <button class="modality-btn" data-mod="t1ce">T1ce</button>
+          <button class="modality-btn" data-mod="t2">T2</button>
+          <button class="modality-btn" data-mod="flair">FLAIR</button>
+        </div>
+      </div>
+
+      <div style="width:1px;height:24px;background:var(--border)"></div>
+
+      <div>
+        <span class="muted" style="font-size:0.78rem;margin-right:6px">뷰</span>
+        <div class="modality-btn-group" id="view-group">
+          <button class="modality-btn active" data-view="axial">Axial</button>
+          <button class="modality-btn" data-view="coronal">Coronal</button>
+          <button class="modality-btn" data-view="sagittal">Sagittal</button>
+          <button class="modality-btn" data-view="render">3D</button>
+          <button class="modality-btn" data-view="multiplanar">멀티뷰</button>
+        </div>
+      </div>
+
+      <div style="width:1px;height:24px;background:var(--border)"></div>
+
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-mask" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.85rem">종양 마스크</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="muted" style="font-size:0.78rem">불투명도</span>
+        <input class="slice-range" type="range" min="0" max="100" value="50" id="mask-opacity" style="width:90px" />
+        <span id="opacity-val" style="font-size:0.78rem;width:28px">50%</span>
+      </div>
+
+      <div style="margin-left:auto">
+        <span class="muted" style="font-size:0.78rem" id="viewer-status"></span>
+      </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="viewer-canvas-wrap">
+      <canvas id="niivue-canvas"></canvas>
+      <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <span style="color:var(--muted);font-size:0.88rem">NIfTI 파일 로딩 중...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/niivue.umd.js"></script>
+<script>window.Niivue = window.niivue.Niivue;</script>
+<script src="js/api.js"></script>
+<script src="js/viewer.js"></script>
+</body>
+</html>

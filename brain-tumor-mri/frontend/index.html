@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>뇌종양 MRI 분석 시스템 — 로그인</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🧠</div>
+      <div>
+        <h2 style="font-size:1.1rem">뇌종양 MRI 분석 시스템</h2>
+        <p class="muted">Brain Tumor AI Assistant</p>
+      </div>
+    </div>
+
+    <div class="tab-row" id="tabs">
+      <button class="tab-btn active" data-tab="login">로그인</button>
+      <button class="tab-btn" data-tab="register">계정 등록</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <form class="login-form" id="login-form">
+      <div class="form-group">
+        <label class="form-label">이메일</label>
+        <input class="form-input" type="email" id="login-email" placeholder="doctor@hospital.kr" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">비밀번호</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••" required />
+      </div>
+      <div id="login-alert" class="alert alert-error" style="display:none"></div>
+      <button class="btn btn-primary" type="submit" id="login-btn" style="width:100%;justify-content:center;margin-top:4px">
+        로그인
+      </button>
+      <p class="muted" style="text-align:center;font-size:0.8rem">
+        테스트 계정: demo@hospital.kr / demo1234
+      </p>
+    </form>
+
+    <!-- 등록 폼 -->
+    <form class="login-form" id="register-form" style="display:none">
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input class="form-input" type="text" id="reg-name" placeholder="홍길동" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">이메일</label>
+        <input class="form-input" type="email" id="reg-email" placeholder="doctor@hospital.kr" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">비밀번호 (8자 이상)</label>
+        <input class="form-input" type="password" id="reg-password" placeholder="••••••••" required minlength="8" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">소속 과</label>
+        <input class="form-input" type="text" id="reg-dept" placeholder="신경외과" />
+      </div>
+      <div id="register-alert" class="alert" style="display:none"></div>
+      <button class="btn btn-primary" type="submit" id="register-btn" style="width:100%;justify-content:center;margin-top:4px">
+        계정 등록
+      </button>
+    </form>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  // 이미 로그인된 경우 대시보드로
+  if (getToken() && !isTokenExpired()) {
+    window.location.href = "dashboard.html";
+  }
+
+  // 탭 전환
+  document.getElementById("tabs").addEventListener("click", (e) => {
+    if (!e.target.dataset.tab) return;
+    const tab = e.target.dataset.tab;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.getElementById("login-form").style.display = tab === "login" ? "flex" : "none";
+    document.getElementById("register-form").style.display = tab === "register" ? "flex" : "none";
+  });
+
+  // 로그인
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("login-btn");
+    const alert = document.getElementById("login-alert");
+    alert.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "로그인 중...";
+    try {
+      await Auth.login(
+        document.getElementById("login-email").value,
+        document.getElementById("login-password").value
+      );
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      alert.textContent = err.message;
+      alert.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "로그인";
+    }
+  });
+
+  // 회원가입
+  document.getElementById("register-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("register-btn");
+    const alert = document.getElementById("register-alert");
+    alert.style.display = "none";
+    alert.className = "alert alert-error";
+    btn.disabled = true;
+    btn.textContent = "등록 중...";
+    try {
+      await apiFetch("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          name: document.getElementById("reg-name").value,
+          email: document.getElementById("reg-email").value,
+          password: document.getElementById("reg-password").value,
+          department: document.getElementById("reg-dept").value || null,
+        }),
+      });
+      alert.className = "alert alert-success";
+      alert.textContent = "계정이 생성되었습니다. 로그인해주세요.";
+      alert.style.display = "block";
+    } catch (err) {
+      alert.textContent = err.message;
+      alert.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "계정 등록";
+    }
+  });
+</script>
+</body>
+</html>

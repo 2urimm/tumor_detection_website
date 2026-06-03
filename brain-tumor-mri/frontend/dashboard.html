@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>환자 관리 — 뇌종양 MRI 분석</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- ── 사이드바: 환자 목록 ── -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🧠</div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">BrainAI</div>
+          <div class="muted" style="font-size:0.75rem">MRI Analysis</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-new-patient" style="width:100%;justify-content:center">
+        + 새 환자 등록
+      </button>
+      <input class="form-input" type="search" id="search-input" placeholder="환자 이름 / ID 검색" style="padding:7px 10px" />
+    </div>
+    <div class="patient-list" id="patient-list">
+      <div style="text-align:center;padding:30px 0" class="muted">불러오는 중...</div>
+    </div>
+  </aside>
+
+  <!-- ── 메인 콘텐츠 ── -->
+  <main class="main-content">
+    <div class="topbar">
+      <h1 id="main-title">환자를 선택하세요</h1>
+      <div class="doctor-info">
+        <div class="doctor-avatar" id="doctor-avatar">?</div>
+        <div>
+          <div style="font-weight:600;font-size:0.9rem" id="doctor-name">—</div>
+          <div class="muted" id="doctor-dept"></div>
+        </div>
+        <a href="browse.html" class="btn btn-outline btn-sm">🔬 BraTS 탐색</a>
+        <button class="btn btn-outline btn-sm" id="btn-logout">로그아웃</button>
+      </div>
+    </div>
+
+    <!-- 환자 미선택 상태 -->
+    <div id="empty-state" style="flex:1;display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;color:var(--muted)">
+        <div style="font-size:3rem;margin-bottom:12px">🧠</div>
+        <p>왼쪽 목록에서 환자를 선택하거나<br>새 환자를 등록하세요.</p>
+      </div>
+    </div>
+
+    <!-- 환자 상세 -->
+    <div id="patient-detail" class="patient-detail" style="display:none">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <h2 id="pd-name"></h2>
+            <p class="muted" id="pd-code"></p>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" id="btn-new-analysis">📤 MRI 분석 요청</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete-patient">삭제</button>
+          </div>
+        </div>
+        <div class="info-grid" style="margin-top:16px">
+          <div class="info-item">
+            <span class="muted" style="font-size:0.78rem">나이</span>
+            <span class="info-value" id="pd-age">—</span>
+          </div>
+          <div class="info-item">
+            <span class="muted" style="font-size:0.78rem">성별</span>
+            <span class="info-value" id="pd-gender">—</span>
+          </div>
+          <div class="info-item">
+            <span class="muted" style="font-size:0.78rem">등록일</span>
+            <span class="info-value" id="pd-date">—</span>
+          </div>
+        </div>
+        <div id="pd-notes" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);color:var(--muted);font-size:0.88rem;display:none"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h2>분석 이력</h2>
+          <span class="muted" id="analysis-count"></span>
+        </div>
+        <div class="analysis-list" id="analysis-list">
+          <div class="muted" style="text-align:center;padding:20px">분석 이력 없음</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── 새 환자 등록 모달 ── -->
+<div class="modal-overlay hidden" id="modal-patient">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>새 환자 등록</h2>
+      <button class="close-btn" id="close-patient-modal">✕</button>
+    </div>
+    <form class="modal-form" id="patient-form">
+      <div class="form-group">
+        <label class="form-label">환자 ID (병원 코드)</label>
+        <input class="form-input" type="text" id="f-code" placeholder="P-2024-001" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input class="form-input" type="text" id="f-name" placeholder="홍길동" required />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">나이</label>
+          <input class="form-input" type="number" id="f-age" placeholder="45" min="0" max="150" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">성별</label>
+          <select class="form-input" id="f-gender">
+            <option value="">선택</option>
+            <option value="남">남</option>
+            <option value="여">여</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <textarea class="form-input" id="f-notes" rows="3" placeholder="임상 메모 (선택 사항)"></textarea>
+      </div>
+      <div id="patient-alert" class="alert alert-error" style="display:none"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" type="button" id="cancel-patient">취소</button>
+        <button class="btn btn-primary" type="submit" id="submit-patient">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MRI 업로드 모달 ── -->
+<div class="modal-overlay hidden" id="modal-analysis">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h2>MRI 파일 업로드</h2>
+      <button class="close-btn" id="close-analysis-modal">✕</button>
+    </div>
+    <p class="muted" style="margin-bottom:16px;font-size:0.85rem">
+      4개 모달리티 NIfTI(.nii, .nii.gz) 또는 DICOM(.dcm) 파일을 선택하세요.<br>
+      DICOM은 자동으로 NIfTI로 변환됩니다.
+    </p>
+    <form id="analysis-form">
+      <div class="upload-grid">
+        <div class="form-group">
+          <label class="form-label">T1</label>
+          <label class="file-drop" id="drop-t1">
+            <input type="file" id="file-t1" accept=".nii,.gz,.dcm" style="display:none" required />
+            <div class="file-drop-label">클릭하여 선택</div>
+            <div class="file-drop-name" id="name-t1"></div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">T1ce (조영증강)</label>
+          <label class="file-drop" id="drop-t1ce">
+            <input type="file" id="file-t1ce" accept=".nii,.gz,.dcm" style="display:none" required />
+            <div class="file-drop-label">클릭하여 선택</div>
+            <div class="file-drop-name" id="name-t1ce"></div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">T2</label>
+          <label class="file-drop" id="drop-t2">
+            <input type="file" id="file-t2" accept=".nii,.gz,.dcm" style="display:none" required />
+            <div class="file-drop-label">클릭하여 선택</div>
+            <div class="file-drop-name" id="name-t2"></div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">FLAIR</label>
+          <label class="file-drop" id="drop-flair">
+            <input type="file" id="file-flair" accept=".nii,.gz,.dcm" style="display:none" required />
+            <div class="file-drop-label">클릭하여 선택</div>
+            <div class="file-drop-name" id="name-flair"></div>
+          </label>
+        </div>
+      </div>
+      <div id="analysis-alert" class="alert alert-error" style="display:none;margin-top:12px"></div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" type="button" id="cancel-analysis">취소</button>
+        <button class="btn btn-primary" type="submit" id="submit-analysis">분석 시작</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

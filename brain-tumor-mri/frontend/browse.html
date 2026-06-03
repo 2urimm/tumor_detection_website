@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BraTS 데이터 탐색 — 뇌종양 MRI 분석</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .browse-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      grid-template-rows: 48px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* 상단 헤더 */
+    .browse-header {
+      grid-column: 1 / -1;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      padding: 0 16px;
+    }
+    .browse-header-title { font-weight: 700; font-size: 0.95rem; }
+    .browse-header-sub   { color: var(--muted); font-size: 0.8rem; }
+    .header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+    /* 환자 목록 사이드바 */
+    .browse-sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sidebar-search { padding: 10px; border-bottom: 1px solid var(--border); }
+    .sidebar-count  { padding: 6px 12px; font-size: 0.75rem; color: var(--muted); }
+    .browse-patient-list { flex: 1; overflow-y: auto; }
+    .browse-patient-item {
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+      transition: background 0.1s; display: flex; justify-content: space-between; align-items: center;
+    }
+    .browse-patient-item:hover  { background: var(--card); }
+    .browse-patient-item.active { background: var(--accent-dim); border-left: 3px solid var(--accent); }
+    .browse-patient-item .pid   { font-size: 0.82rem; font-weight: 600; }
+    .browse-patient-item .seg-badge {
+      font-size: 0.68rem; background: #16a34a22; color: var(--success);
+      border-radius: 4px; padding: 1px 6px;
+    }
+
+    /* 메인 뷰어 영역 */
+    .browse-main {
+      display: flex; flex-direction: column; background: #000; overflow: hidden;
+    }
+
+    /* 툴바 */
+    .browse-toolbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 8px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+    .toolbar-sep { width: 1px; height: 22px; background: var(--border); }
+
+    /* 캔버스 */
+    .browse-canvas-wrap { flex: 1; position: relative; min-height: 0; }
+    #browse-canvas { display: block; width: 100%; height: 100%; }
+
+    /* 빈 상태 */
+    .empty-canvas {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--muted); gap: 12px;
+    }
+    .empty-canvas .icon { font-size: 3rem; opacity: 0.4; }
+
+    /* 환자 정보 오버레이 */
+    .patient-overlay {
+      position: absolute; top: 12px; left: 12px;
+      background: #000000bb; border-radius: 8px; padding: 10px 14px;
+      font-size: 0.78rem; line-height: 1.7; pointer-events: none;
+      display: none;
+    }
+    .patient-overlay.visible { display: block; }
+    .patient-overlay .ol-label { color: var(--muted); }
+    .patient-overlay .ol-val   { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="browse-layout">
+
+  <!-- ── 헤더 ── -->
+  <header class="browse-header">
+    <a href="dashboard.html" class="btn btn-outline btn-sm">← 대시보드</a>
+    <div>
+      <div class="browse-header-title">🧠 BraTS 데이터 탐색</div>
+      <div class="browse-header-sub">원본 NIfTI 파일 직접 시각화 (전처리 없음)</div>
+    </div>
+    <div class="header-right">
+      <span class="muted" style="font-size:0.8rem" id="doctor-label"></span>
+      <button class="btn btn-outline btn-sm" id="btn-manage-paths">📁 경로 관리</button>
+      <button class="btn btn-outline btn-sm" onclick="Auth.logout()">로그아웃</button>
+    </div>
+  </header>
+
+  <!-- ── 환자 목록 사이드바 ── -->
+  <aside class="browse-sidebar">
+    <div class="sidebar-search">
+      <input class="form-input" type="search" id="search-input"
+             placeholder="환자 ID 검색..." style="width:100%;padding:7px 10px" />
+    </div>
+    <div class="sidebar-count" id="patient-count">불러오는 중...</div>
+    <div class="browse-patient-list" id="patient-list"></div>
+  </aside>
+
+  <!-- ── 뷰어 메인 ── -->
+  <div class="browse-main">
+
+    <!-- 툴바 -->
+    <div class="browse-toolbar" id="toolbar" style="display:none">
+      <!-- 모달리티 -->
+      <div>
+        <span class="muted" style="font-size:0.75rem;margin-right:6px">모달리티</span>
+        <div class="modality-btn-group" id="mod-group">
+          <button class="modality-btn active" data-mod="t1">T1</button>
+          <button class="modality-btn" data-mod="t1ce">T1ce</button>
+          <button class="modality-btn" data-mod="t2">T2</button>
+          <button class="modality-btn" data-mod="flair">FLAIR</button>
+        </div>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <!-- 뷰 모드 -->
+      <div>
+        <span class="muted" style="font-size:0.75rem;margin-right:6px">뷰</span>
+        <div class="modality-btn-group" id="view-group">
+          <button class="modality-btn active" data-view="axial">Axial</button>
+          <button class="modality-btn" data-view="coronal">Coronal</button>
+          <button class="modality-btn" data-view="sagittal">Sagittal</button>
+          <button class="modality-btn" data-view="render">3D</button>
+          <button class="modality-btn" data-view="multiplanar">멀티뷰</button>
+        </div>
+      </div>
+
+      <div class="toolbar-sep"></div>
+
+      <!-- 분할 마스크 (seg 있을 때만) -->
+      <div class="toggle-row" id="seg-control" style="display:none">
+        <label class="toggle">
+          <input type="checkbox" id="toggle-seg" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.85rem">분할 마스크</span>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:8px">
+          <span class="muted" style="font-size:0.75rem">불투명도</span>
+          <input class="slice-range" type="range" min="0" max="100" value="50"
+                 id="seg-opacity" style="width:70px" />
+          <span id="opacity-val" style="font-size:0.75rem;width:28px">50%</span>
+        </div>
+      </div>
+
+      <div style="margin-left:auto">
+        <span class="muted" style="font-size:0.78rem" id="viewer-status"></span>
+      </div>
+    </div>
+
+    <!-- 캔버스 -->
+    <div class="browse-canvas-wrap">
+      <canvas id="browse-canvas"></canvas>
+
+      <!-- 빈 상태 -->
+      <div class="empty-canvas" id="empty-state">
+        <div class="icon">🧠</div>
+        <p>왼쪽에서 환자를 선택하면<br>MRI 영상이 표시됩니다</p>
+        <p class="muted" style="font-size:0.78rem">원본 BraTS 데이터 · 무전처리 시각화</p>
+      </div>
+
+      <!-- 환자 정보 오버레이 -->
+      <div class="patient-overlay" id="patient-overlay">
+        <div><span class="ol-label">환자 ID  </span><span class="ol-val" id="ol-pid">—</span></div>
+        <div><span class="ol-label">모달리티 </span><span class="ol-val" id="ol-mod">—</span></div>
+        <div><span class="ol-label">Shape    </span><span class="ol-val">240 × 240 × 155</span></div>
+        <div><span class="ol-label">Voxel    </span><span class="ol-val">1 × 1 × 1 mm</span></div>
+      </div>
+
+      <!-- 로딩 -->
+      <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+        <span style="color:var(--muted);font-size:0.88rem" id="loading-msg">NIfTI 로딩 중...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 범례 패널 (우하단 고정) -->
+<div id="seg-legend" style="
+  display:none; position:fixed; bottom:16px; right:16px;
+  background:#000000bb; border-radius:8px; padding:12px 16px;
+  font-size:0.78rem; line-height:2;
+">
+  <div style="font-weight:700;margin-bottom:4px;color:var(--muted)">분할 범례</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="display:inline-block;width:12px;height:12px;background:#ff4444;border-radius:2px"></span> 괴사 (Necrotic Core) — 레이블 1
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="display:inline-block;width:12px;height:12px;background:#44aaff;border-radius:2px"></span> 부종 (Edema) — 레이블 2
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="display:inline-block;width:12px;height:12px;background:#ffaa00;border-radius:2px"></span> 활성종양 (Enhancing) — 레이블 4
+  </div>
+</div>
+
+<!-- ── 경로 관리 모달 ── -->
+<div class="modal-overlay hidden" id="modal-paths">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <h2>📁 BraTS 데이터 경로 관리</h2>
+      <button class="close-btn" id="close-paths-modal">✕</button>
+    </div>
+
+    <!-- 경로 추가 폼 -->
+    <div style="margin-bottom:16px">
+      <label class="form-label">폴더 경로 추가</label>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" type="text" id="new-path-input"
+               placeholder="예: D:\BraTS\추가데이터" style="flex:1" />
+        <input class="form-input" type="text" id="new-path-label"
+               placeholder="이름 (선택)" style="width:120px" />
+        <button class="btn btn-primary btn-sm" id="btn-add-path">추가</button>
+      </div>
+      <div id="path-add-error" class="alert alert-error" style="display:none;margin-top:8px"></div>
+    </div>
+
+    <!-- 등록된 경로 목록 -->
+    <div>
+      <label class="form-label">등록된 경로</label>
+      <div id="path-list" style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/niivue.umd.js"></script>
+<script>window.Niivue = window.niivue.Niivue;</script>
+<script src="js/api.js"></script>
+<script src="js/browse.js"></script>
+</body>
+</html>

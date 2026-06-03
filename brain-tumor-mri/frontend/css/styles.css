@@ -1,0 +1,400 @@
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg: #0a0e1a;
+  --surface: #141927;
+  --card: #1e2537;
+  --border: #2a3350;
+  --accent: #4f8ef7;
+  --accent-dim: #2563eb22;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --radius: 10px;
+  --shadow: 0 4px 24px #00000055;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+a { color: var(--accent); text-decoration: none; }
+button { cursor: pointer; }
+input, select, textarea { font-family: inherit; font-size: inherit; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ─── Typography ─────────────────────────────────────────────────────────────── */
+h1 { font-size: 1.6rem; font-weight: 700; }
+h2 { font-size: 1.2rem; font-weight: 600; }
+h3 { font-size: 1rem; font-weight: 600; }
+.muted { color: var(--muted); font-size: 0.85rem; }
+.mono { font-family: 'Consolas', monospace; }
+
+/* ─── Components ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border: none; border-radius: 6px;
+  font-weight: 600; font-size: 0.9rem; transition: filter 0.15s, opacity 0.15s;
+}
+.btn:hover { filter: brightness(1.15); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-sm { padding: 5px 12px; font-size: 0.82rem; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px;
+}
+
+.badge {
+  display: inline-block; padding: 2px 10px;
+  border-radius: 99px; font-size: 0.75rem; font-weight: 600;
+}
+.badge-done { background: #16a34a22; color: var(--success); }
+.badge-processing { background: #b4530022; color: var(--warning); }
+.badge-failed { background: #dc262622; color: var(--danger); }
+.badge-pending { background: #33415522; color: var(--muted); }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label { font-size: 0.82rem; color: var(--muted); font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+.form-input {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 9px 12px; color: var(--text);
+  transition: border-color 0.15s;
+}
+.form-input:focus { outline: none; border-color: var(--accent); }
+.form-input::placeholder { color: var(--muted); }
+
+.alert {
+  padding: 12px 16px; border-radius: 6px; font-size: 0.88rem; margin-top: 12px;
+}
+.alert-error { background: #dc262622; border: 1px solid #dc262655; color: #fca5a5; }
+.alert-success { background: #16a34a22; border: 1px solid #16a34a55; color: #86efac; }
+
+/* ─── Spinner ─────────────────────────────────────────────────────────────────── */
+.spinner {
+  width: 22px; height: 22px;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Login Page ─────────────────────────────────────────────────────────────── */
+.login-wrap {
+  min-height: 100vh; display: flex; align-items: center;
+  justify-content: center; padding: 20px;
+  background: radial-gradient(ellipse at 60% 40%, #1e2d5855 0%, transparent 70%);
+}
+.login-card {
+  width: 100%; max-width: 420px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 40px; box-shadow: var(--shadow);
+}
+.login-logo {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+}
+.login-logo-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+.login-form { display: flex; flex-direction: column; gap: 18px; }
+.tab-row { display: flex; gap: 8px; background: var(--surface); border-radius: 8px; padding: 4px; margin-bottom: 4px; }
+.tab-btn { flex: 1; padding: 7px; border: none; border-radius: 6px; background: transparent; color: var(--muted); font-weight: 600; font-size: 0.88rem; transition: all 0.15s; }
+.tab-btn.active { background: var(--card); color: var(--text); }
+
+/* ─── Dashboard ──────────────────────────────────────────────────────────────── */
+.dashboard { display: grid; grid-template-columns: 280px 1fr; height: 100vh; overflow: hidden; }
+
+.sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-header {
+  padding: 20px; border-bottom: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.sidebar-logo { display: flex; align-items: center; gap: 10px; }
+.sidebar-logo-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.patient-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.patient-item {
+  padding: 12px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s;
+}
+.patient-item:hover { background: var(--card); border-color: var(--border); }
+.patient-item.active { background: var(--accent-dim); border-color: var(--accent); }
+.patient-item-name { font-weight: 600; margin-bottom: 4px; }
+.patient-item-meta { font-size: 0.78rem; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+
+.main-content { overflow-y: auto; padding: 28px; display: flex; flex-direction: column; gap: 20px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; }
+.doctor-info { display: flex; align-items: center; gap: 10px; }
+.doctor-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem;
+}
+
+.patient-detail { display: flex; flex-direction: column; gap: 16px; }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+.info-item { display: flex; flex-direction: column; gap: 4px; }
+.info-value { font-weight: 600; }
+
+.analysis-list { display: flex; flex-direction: column; gap: 10px; }
+.analysis-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.analysis-row:hover { border-color: var(--accent); }
+.prob-bar-wrap { width: 120px; }
+.prob-bar-track { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.prob-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+
+.prob-high .prob-bar-fill { background: var(--danger); }
+.prob-mid .prob-bar-fill { background: var(--warning); }
+.prob-low .prob-bar-fill { background: var(--success); }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: #00000088;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px; width: 100%; max-width: 500px;
+  box-shadow: var(--shadow);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.modal-form { display: flex; flex-direction: column; gap: 14px; }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.close-btn { background: none; border: none; color: var(--muted); font-size: 1.2rem; line-height: 1; }
+
+.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.file-drop {
+  border: 2px dashed var(--border); border-radius: 8px;
+  padding: 18px; text-align: center; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.file-drop:hover, .file-drop.has-file { border-color: var(--accent); }
+.file-drop-label { color: var(--muted); font-size: 0.82rem; }
+.file-drop-name { color: var(--accent); font-size: 0.82rem; margin-top: 4px; word-break: break-all; }
+
+/* ─── Viewer Page ─────────────────────────────────────────────────────────────── */
+.viewer-layout {
+  display: grid; grid-template-columns: 300px 1fr;
+  height: 100vh; overflow: hidden;
+}
+.viewer-sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow-y: auto;
+}
+.viewer-sidebar-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.viewer-main { display: flex; flex-direction: column; background: #000; overflow: hidden; }
+.viewer-toolbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.viewer-canvas-wrap { flex: 1; position: relative; }
+#niivue-canvas { display: block; width: 100%; height: 100%; }
+
+.result-section { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.result-section h3 { margin-bottom: 12px; }
+.result-metric { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.result-metric:last-child { border-bottom: none; }
+.result-metric-label { color: var(--muted); font-size: 0.82rem; }
+.result-metric-value { font-weight: 700; font-size: 0.95rem; }
+
+.prob-display {
+  text-align: center; padding: 20px;
+}
+.prob-circle {
+  width: 110px; height: 110px; border-radius: 50%;
+  border: 6px solid; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; margin: 0 auto 12px;
+}
+.prob-number { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+.prob-label { font-size: 0.72rem; color: var(--muted); }
+
+.prob-high-color { border-color: var(--danger); color: var(--danger); }
+.prob-mid-color { border-color: var(--warning); color: var(--warning); }
+.prob-low-color { border-color: var(--success); color: var(--success); }
+
+.seg-legend { display: flex; flex-direction: column; gap: 8px; }
+.seg-legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.seg-color { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; }
+
+.modality-btn-group { display: flex; gap: 4px; }
+.modality-btn {
+  padding: 5px 10px; border: 1px solid var(--border);
+  border-radius: 5px; background: transparent; color: var(--muted);
+  font-size: 0.78rem; font-weight: 600; transition: all 0.15s;
+}
+.modality-btn.active, .modality-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+.toggle-row { display: flex; align-items: center; gap: 10px; }
+.toggle { position: relative; width: 36px; height: 20px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--border);
+  border-radius: 20px; cursor: pointer; transition: 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute;
+  width: 14px; height: 14px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; transition: 0.2s;
+}
+.toggle input:checked + .toggle-slider { background: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+.slice-range { -webkit-appearance: none; width: 120px; height: 4px; background: var(--border); border-radius: 2px; outline: none; }
+.slice-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); cursor: pointer; }
+
+.loading-overlay {
+  position: absolute; inset: 0; background: #00000099;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  z-index: 10;
+}
+.loading-overlay.hidden { display: none; }
+.loading-overlay .spinner { width: 40px; height: 40px; border-width: 4px; }
+
+/* ─── XAI 소견 ──────────────────────────────────────────────────────────────── */
+.xai-risk-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 12px;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.3px;
+}
+.xai-risk-danger  { background: rgba(239,68,68,.18);  color: #f87171; }
+.xai-risk-warning { background: rgba(245,158,11,.18); color: #fbbf24; }
+.xai-risk-success { background: rgba(34,197,94,.18);  color: #4ade80; }
+
+.xai-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.xai-bar-row { display: flex; align-items: center; gap: 7px; }
+.xai-bar-label { font-size: 0.75rem; color: var(--muted); width: 52px; flex-shrink: 0; }
+.xai-bar-track {
+  flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden;
+}
+.xai-bar {
+  height: 100%; border-radius: 4px; width: 0;
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+}
+.xai-bar-enhancing { background: #ef4444; }
+.xai-bar-necrotic  { background: #f97316; }
+.xai-bar-edema     { background: #eab308; }
+.xai-bar-val { font-size: 0.72rem; color: var(--text); width: 90px; text-align: right; flex-shrink: 0; }
+
+.xai-description {
+  font-size: 0.81rem; line-height: 1.75; color: var(--muted);
+  word-break: keep-all;
+}
+
+/* ─── 뷰 모드 토글 (의사용 / 환자용) ─────────────────────────────────────── */
+.view-mode-bar {
+  display: flex; gap: 0; padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.view-mode-btn {
+  flex: 1; padding: 7px 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+}
+.view-mode-btn:first-child { border-radius: 6px 0 0 6px; }
+.view-mode-btn:last-child  { border-radius: 0 6px 6px 0; border-left: none; }
+.view-mode-btn.active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.view-mode-btn:not(.active):hover {
+  background: var(--accent-dim); color: var(--accent);
+}
+
+/* ─── AI 임상 소견 (의사용) ──────────────────────────────────────────────── */
+.ai-loading-box {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0;
+}
+.ai-section-header {
+  font-size: 0.78rem; font-weight: 700; color: var(--accent);
+  letter-spacing: 0.02em; margin: 12px 0 4px;
+  padding-bottom: 4px; border-bottom: 1px solid var(--accent-dim);
+}
+.ai-section-header:first-child { margin-top: 0; }
+.ai-section-body {
+  font-size: 0.8rem; line-height: 1.7; color: var(--muted);
+  word-break: keep-all; margin-bottom: 2px;
+}
+
+/* ─── 환자용 상태 카드 ───────────────────────────────────────────────────── */
+.patient-status-card {
+  border-radius: 10px; border: 2px solid var(--border);
+  padding: 20px 16px; text-align: center;
+  background: var(--card); transition: border-color 0.2s;
+}
+.patient-status-card.status-attention { border-color: var(--warning); }
+.patient-status-card.status-monitor   { border-color: var(--accent); }
+.patient-status-card.status-stable    { border-color: var(--success); }
+
+.patient-status-icon  { font-size: 2rem; margin-bottom: 8px; }
+.patient-status-label {
+  font-size: 1rem; font-weight: 700; margin-bottom: 8px;
+}
+.patient-status-card.status-attention .patient-status-label { color: var(--warning); }
+.patient-status-card.status-monitor   .patient-status-label { color: var(--accent); }
+.patient-status-card.status-stable    .patient-status-label { color: var(--success); }
+
+.patient-status-msg {
+  font-size: 0.82rem; color: var(--muted); line-height: 1.5; word-break: keep-all;
+}
+
+/* ─── 환자용 AI 설명 ─────────────────────────────────────────────────────── */
+.patient-explanation p {
+  font-size: 0.85rem; line-height: 1.8; color: var(--text);
+  word-break: keep-all;
+}
+
+/* ─── 다음 단계 안내 ─────────────────────────────────────────────────────── */
+.next-steps-list { display: flex; flex-direction: column; gap: 10px; }
+.next-step-item  { display: flex; align-items: flex-start; gap: 10px; }
+.next-step-num {
+  flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-dim); border: 1px solid var(--accent);
+  color: var(--accent); font-size: 0.72rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.next-step-item span:last-child {
+  font-size: 0.82rem; color: var(--muted); line-height: 1.5; word-break: keep-all;
+  padding-top: 2px;
+}
+
+/* ─── 분석 행 삭제 버튼 ──────────────────────────────────────────────────── */
+.btn-analysis-delete {
+  flex-shrink: 0;
+  padding: 4px 7px; border: 1px solid transparent;
+  border-radius: 5px; background: transparent;
+  color: var(--muted); font-size: 0.85rem;
+  opacity: 0; transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.analysis-row:hover .btn-analysis-delete { opacity: 1; }
+.btn-analysis-delete:hover {
+  color: var(--danger); border-color: var(--danger);
+  background: rgba(239,68,68,.1);
+}

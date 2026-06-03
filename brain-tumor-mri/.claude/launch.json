@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "brain-tumor-backend",
+      "runtimeExecutable": "F:\\Bio_health\\WEB\\brain-tumor-mri\\backend\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+      "cwd": "F:\\Bio_health\\WEB\\brain-tumor-mri\\backend",
+      "port": 8000
+    }
+  ]
+}
